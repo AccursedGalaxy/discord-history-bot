@@ -28,28 +28,45 @@ func handleHistory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// Get the number of messages to retrieve
 	numMessages := int(i.ApplicationCommandData().Options[0].IntValue())
-	if numMessages <= 0 || numMessages > 100 {
-		content := "Please request between 1 and 100 messages."
+	if numMessages <= 0 || numMessages > 1000 {
+		content := "Please request between 1 and 1000 messages."
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
 			Content: &content,
 		})
 		return
 	}
 
-	// Get messages
-	messages, err := s.ChannelMessages(i.ChannelID, numMessages, "", "", "")
-	if err != nil {
-		errMsg := fmt.Sprintf("Error retrieving messages: %s", err.Error())
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Content: &errMsg,
-		})
-		return
+	// Calculate number of API calls needed
+	remaining := numMessages
+	var allMessages []*discordgo.Message
+	var lastMessageID string
+
+	// Fetch messages in batches of 100
+	for remaining > 0 {
+		limit := min(remaining, 100)
+		messages, err := s.ChannelMessages(i.ChannelID, limit, lastMessageID, "", "")
+		if err != nil {
+			errMsg := fmt.Sprintf("Error retrieving messages: %s", err.Error())
+			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Content: &errMsg,
+			})
+			return
+		}
+
+		// Break if no messages returned
+		if len(messages) == 0 {
+			break
+		}
+
+		allMessages = append(allMessages, messages...)
+		lastMessageID = messages[len(messages)-1].ID
+		remaining -= len(messages)
 	}
 
 	// Format messages for file
 	var content string
-	for i := len(messages) - 1; i >= 0; i-- {
-		msg := messages[i]
+	for i := len(allMessages) - 1; i >= 0; i-- {
+		msg := allMessages[i]
 		// Skip messages from bots and empty messages
 		if msg.Author.Bot || msg.Content == "" {
 			continue
@@ -81,7 +98,7 @@ func handleHistory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	filename := fmt.Sprintf("chat_history_%s.txt", time.Now().Format("2006-01-02_15-04-05"))
 
 	// Save to temporary file
-	err = utils.SaveToFile(filename, content)
+	err := utils.SaveToFile(filename, content)
 	if err != nil {
 		errMsg := fmt.Sprintf("Error saving file: %s", err.Error())
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
@@ -109,4 +126,12 @@ func handleHistory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		os.Remove(filename)
 	}
+}
+
+// Helper function to get minimum of two numbers
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 } 

@@ -45,8 +45,10 @@ func main() {
 			{
 				Type:        discordgo.ApplicationCommandOptionInteger,
 				Name:        "messages",
-				Description: "Number of messages to retrieve",
+				Description: "Number of messages to retrieve (max 1000)",
 				Required:    true,
+				MinValue:    &[]float64{1}[0],
+				MaxValue:    1000,
 			},
 			{
 				Type:        discordgo.ApplicationCommandOptionBoolean,
