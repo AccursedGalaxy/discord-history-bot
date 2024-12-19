@@ -7,6 +7,7 @@ A simple Discord bot written in Go that allows users to export chat history to t
 - Export recent chat messages to text files
 - Configurable number of messages (1-100)
 - Filters out bot messages and empty messages
+- Optional local file saving
 - Timestamps included with each message
 - Uses Discord slash commands
 
@@ -14,7 +15,7 @@ A simple Discord bot written in Go that allows users to export chat history to t
 
 - Go 1.21 or higher
 - A Discord Bot Token
-- Proper bot permissions set up
+- A Discord server with proper permissions
 
 ## Installation
 
@@ -30,12 +31,15 @@ go mod tidy
 
 ```
 DISCORD_TOKEN=your_discord_bot_token_here
+TEST_GUILD_ID=your_test_server_id_here  # Optional, for development
 ```
 
 2. Set up your Discord bot:
    - Go to [Discord Developer Portal](https://discord.com/developers/applications)
    - Create a new application
    - Go to the "Bot" section and create a bot
+   - Under "Privileged Gateway Intents", enable:
+     - Message Content Intent
    - Copy the token and paste it in your `.env` file
    - Go to OAuth2 -> URL Generator
    - Select the following scopes:
@@ -46,7 +50,14 @@ DISCORD_TOKEN=your_discord_bot_token_here
      - Send Messages
      - Read Message History
      - Attach Files
-   - Use the generated URL to invite the bot to your server
+     - Use Slash Commands
+   - The total permissions integer should be: `117760`
+
+3. Development Setup (Optional):
+   - Enable Developer Mode in Discord (User Settings -> App Settings -> Advanced -> Developer Mode)
+   - Right-click your test server and "Copy ID"
+   - Add this ID to your `.env` file as `TEST_GUILD_ID`
+   - This enables instant command updates during development
 
 ## Running the Bot
 
@@ -71,6 +82,22 @@ The output file will be formatted as:
 
 Note: Bot messages and empty messages are automatically filtered out.
 
+## Troubleshooting
+
+1. "Missing Access" error:
+   - Ensure the bot has all required permissions listed above
+   - Check if the bot can see the channel you're using
+   - Verify the Message Content Intent is enabled
+
+2. Commands not appearing:
+   - If using global commands (no TEST_GUILD_ID), wait up to an hour
+   - For test servers, commands should appear instantly
+   - Make sure the bot has the "Use Slash Commands" permission
+
+3. Can't save files:
+   - Check if the bot has "Attach Files" permission
+   - Ensure the bot has write permissions in its directory
+
 ## File Structure
 
 ```
@@ -84,13 +111,6 @@ discord-history-bot/
 └── utils/
     └── file.go         # File utility functions
 ```
-
-## Error Handling
-
-The bot includes error handling for common issues:
-- Invalid message count requests
-- Missing permissions
-- File operation errors
 
 ## Contributing
 
