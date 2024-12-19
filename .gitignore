@@ -23,3 +23,7 @@ chat_history_*.txt
 .vscode/
 *.swp
 *.swo 
+
+# Local Startup Script
+run.sh
+*.sh
