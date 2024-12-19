@@ -58,8 +58,10 @@ go run main.go
 
 The bot provides the following slash command:
 
-- `/history [number]`: Retrieves the specified number of messages (1-100) and saves them to a text file
-  - Example: `/history 50` will retrieve the last 50 messages
+- `/history [number] (save)`: Retrieves the specified number of messages (1-100) and sends them as a text file
+  - Example: `/history 50` will retrieve the last 50 messages and send the file to chat
+  - Example: `/history 50 save` will also save the file locally
+  - The save parameter is optional and defaults to false
 
 The output file will be formatted as:
 ```

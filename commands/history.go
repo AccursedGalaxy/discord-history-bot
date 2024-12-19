@@ -3,6 +3,7 @@ package commands
 import (
 	"discord-history-bot/utils"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -70,10 +71,16 @@ func handleHistory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	// Get save option from command
+	var shouldSave bool
+	if len(i.ApplicationCommandData().Options) > 1 {
+		shouldSave = i.ApplicationCommandData().Options[1].BoolValue()
+	}
+
 	// Generate filename with timestamp
 	filename := fmt.Sprintf("chat_history_%s.txt", time.Now().Format("2006-01-02_15-04-05"))
 
-	// Save to file
+	// Save to temporary file
 	err = utils.SaveToFile(filename, content)
 	if err != nil {
 		errMsg := fmt.Sprintf("Error saving file: %s", err.Error())
@@ -94,4 +101,12 @@ func handleHistory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Content: &finalMsg,
 		Files:   []*discordgo.File{file},
 	})
+
+	// Close and remove the file if we shouldn't save it
+	if !shouldSave {
+		if f, ok := file.Reader.(*os.File); ok {
+			f.Close()
+		}
+		os.Remove(filename)
+	}
 } 

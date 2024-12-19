@@ -34,6 +34,9 @@ func main() {
 		log.Fatal("Error opening connection:", err)
 	}
 
+	// Get test guild ID from env
+	testGuildID := os.Getenv("TEST_GUILD_ID")
+
 	// Register slash command
 	command := &discordgo.ApplicationCommand{
 		Name:        "history",
@@ -45,10 +48,22 @@ func main() {
 				Description: "Number of messages to retrieve",
 				Required:    true,
 			},
+			{
+				Type:        discordgo.ApplicationCommandOptionBoolean,
+				Name:        "save",
+				Description: "Save the history file locally",
+				Required:    false,
+			},
 		},
 	}
 
-	_, err = discord.ApplicationCommandCreate(discord.State.User.ID, "", command)
+	// Change the command registration to use test guild if available
+	guildID := "" // Empty string means global command
+	if testGuildID != "" {
+		guildID = testGuildID // Use test guild for faster updates during development
+	}
+
+	_, err = discord.ApplicationCommandCreate(discord.State.User.ID, guildID, command)
 	if err != nil {
 		log.Fatal("Error creating slash command:", err)
 	}
